@@ -226,7 +226,8 @@ class SGPBlock(nn.Module):
             path_pdrop=0.0,  # drop path rate
             act_layer=nn.GELU,  # nonlinear activation used after conv, default ReLU,
             downsample_type='max',
-            init_conv_vars=1  # init gaussian variance for the weight
+            init_conv_vars=1,  # init gaussian variance for the weight
+            num_summary_tokens =64
     ):
         super().__init__()
         # must use odd sized kernel
@@ -260,7 +261,7 @@ class SGPBlock(nn.Module):
             self.GatingMechanism = GatingMechanism(n_embd, 32)
 
         if self.type == 'summary':
-            self.summarization = TokenSummarizationMHA(64, n_embd)
+            self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
             self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
             self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
