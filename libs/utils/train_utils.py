@@ -73,7 +73,7 @@ def make_optimizer(model, optimizer_config):
             fpn = '%s.%s' % (mn, pn) if mn else pn  # full param name
             print(fpn)
             if 'summarization' in pn:
-                decay.add(fpn)
+                no_decay.add(fpn)
             elif pn.endswith('bias'):
                 # all biases will not be decayed
                 no_decay.add(fpn)
