@@ -360,8 +360,10 @@ class SGPBlock(nn.Module):
             print(summary.shape, out_sa.shape)
             res = self.cross_attention(query=summary, key=out_sa, value=out_sa)[0]
             res = res.permute(0, 2, 1)
+
             # print('after permute: ', summary.shape)
             summary = torch.relu(self.summary_project(res))
+            print(summary.shape, res.shape)
 
 
             out = (convw + convkw) * psi + out + summary +fc * phi
