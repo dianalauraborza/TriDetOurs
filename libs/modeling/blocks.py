@@ -355,7 +355,7 @@ class SGPBlock(nn.Module):
             # print(summary.shape)
             # summary = torch.mean(summary, dim=1, keepdim=True)
             # print('after mean ', summary.shape)
-            summary = summary.permute(0, 2, 1)
+            # summary = summary.permute(0, 2, 1)
             out_sa = out.permute(0, 2, 1)
             print(summary.shape, out_sa.shape)
             res = self.cross_attention(query=summary, key=out_sa, value=out_sa)[0]
