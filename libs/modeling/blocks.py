@@ -272,7 +272,7 @@ class SGPBlock(nn.Module):
             self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
 
-        print('type ', self.type)
+        print('type ', self.type, n_ds_stride)
 
         # input
         if n_ds_stride > 1:
@@ -361,7 +361,7 @@ class SGPBlock(nn.Module):
             # print('after mean ', summary.shape)
             summary = summary.permute(0, 2, 1)
             # print('after permute: ', summary.shape)
-            summary = torch.relu(self.summary_project(summary))
+            summary = torch.sigmoid(self.summary_project(summary))
             out_summary = self.summary_fc(out)
 
             summary = out_summary * summary
