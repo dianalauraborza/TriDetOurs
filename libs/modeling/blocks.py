@@ -261,9 +261,10 @@ class SGPBlock(nn.Module):
             self.GatingMechanism = GatingMechanism(n_embd, 32)
 
         if self.type == 'summary':
+            self.cross_attention = nn.MultiheadAttention(n_embd, 4, bias=False, batch_first=True)
             self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
             self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-            self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+            # self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
         print('type ', self.type)
 
@@ -352,14 +353,15 @@ class SGPBlock(nn.Module):
             summary = self.summarization(out)
             # print('out ', out.shape)
             # print(summary.shape)
-            summary = torch.mean(summary, dim=1, keepdim=True)
+            # summary = torch.mean(summary, dim=1, keepdim=True)
             # print('after mean ', summary.shape)
             summary = summary.permute(0, 2, 1)
-            # print('after permute: ', summary.shape)
-            summary = torch.relu(self.summary_project(summary))
-            out_summary = self.summary_fc(out)
+            res = self.cross_attention(query=summary, key=out, value=out)[0]
 
-            summary = out_summary * summary
+            # print('after permute: ', summary.shape)
+            summary = torch.relu(self.summary_project(res))
+
+
             out = (convw + convkw) * psi + out + summary +fc * phi
 
         # ========================
