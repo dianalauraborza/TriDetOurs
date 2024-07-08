@@ -12,7 +12,7 @@ import torch.optim as optim
 from .lr_schedulers import LinearWarmupMultiStepLR, LinearWarmupCosineAnnealingLR
 from .postprocessing import postprocess_results
 from ..modeling import MaskedConv1D, Scale, AffineDropPath, LayerNorm
-from ..modeling.blocks import TokenSummarizationMHA
+
 
 
 ################################################################################
@@ -64,7 +64,7 @@ def make_optimizer(model, optimizer_config):
     # see https://github.com/karpathy/minGPT/blob/master/mingpt/model.py#L134
     decay = set()
     no_decay = set()
-    whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D, TokenSummarizationMHA)
+    whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D)
     blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm )
 
     # loop over all modules / params
@@ -85,6 +85,9 @@ def make_optimizer(model, optimizer_config):
                 no_decay.add(fpn)
             elif pn.endswith('rel_pe'):
                 # corner case for relative position encoding
+                no_decay.add(fpn)
+            elif 'summarization' in pn:
+                # summary no decay
                 no_decay.add(fpn)
 
     # validate that we considered every parameter
