@@ -363,7 +363,7 @@ class SGPBlock(nn.Module):
 
             # print('after permute: ', summary.shape)
             summary = torch.relu(self.summary_project(res))
-            print(summary.shape, res.shape)
+            print(summary.shape, res.shape, out.shape)
 
 
             out = (convw + convkw) * psi + out + summary +fc * phi
