@@ -154,7 +154,7 @@ class ActivityNetDataset(Dataset):
         else:
             filename = os.path.join(self.feat_folder,
                                     self.file_prefix + video_item['id'] + self.file_ext)
-            feats = np.load(filename).astype(np.float32)
+            feats = np.load(filename, allow_pickle=True).astype(np.float32)
 
         # we support both fixed length features / variable length features
         # case 1: variable length features for training

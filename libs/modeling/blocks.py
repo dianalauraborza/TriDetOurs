@@ -3,7 +3,40 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from .weight_init import trunc_normal_
+#bash tools/thumos_i3d_script.sh 0
+#python3 eval.py configs/thumos_i3d.yaml ckpt/thumos_i3d_pretrained/epoch_039.pth.tar
 
+class TokenSummarizationMHA(nn.Module):
+    def __init__(self, num_tokens, dim=256, num_heads=8, dropout=0.1):
+        super(TokenSummarizationMHA, self).__init__()
+        self.num_tokens = num_tokens
+        self.num_heads = num_heads
+        self.dim = dim
+        self.attn = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, dropout=dropout, batch_first=True)
+        self.tokens = nn.Parameter(torch.randn(1, self.num_tokens, self.dim) * 0.02)
+
+
+    def forward(self, v):
+        v = torch.permute(v, (0, 2, 1)) # permute from (dim, T) to (T, dim)
+        bs, t, d = v.shape
+        tokens = self.tokens.expand(bs, -1, -1)
+        attn_output, _ = self.attn(query=tokens, key=v, value=v)
+
+        return attn_output
+
+class GatingMechanism(nn.Module):
+    def __init__(self, output_dim, hidden_dim):
+        super(GatingMechanism, self).__init__()
+        self.fc1 = nn.Conv1d(output_dim * 2, hidden_dim, kernel_size=1, stride=1, padding=0)
+        self.fc2 = nn.Conv1d(hidden_dim, 1, kernel_size=1, stride=1, padding=0)
+
+
+    def forward(self, output1, output2):
+        combined_outputs = torch.cat((output1, output2), dim=1)
+        hidden = F.relu(self.fc1(combined_outputs))
+        gate = torch.sigmoid(self.fc2(hidden))
+        #print('I am here: ', gate.shape)
+        return gate
 
 class MaskedConv1D(nn.Module):
     """
@@ -220,7 +253,10 @@ class SGPBlock(nn.Module):
         self.convw = nn.Conv1d(n_embd, n_embd, kernel_size, stride=1, padding=kernel_size // 2, groups=n_embd)
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-
+	print('I am here')
+        self.GatingMechanism = GatingMechanism(n_embd, 32)
+	self.summarization = TokenSummarizationMHA(64, n_embd)
+	self.summary_project = Conv1d(n_embd, n_embd, stride=1, padding=9, groups=n_embd)
         # input
         if n_ds_stride > 1:
             if downsample_type == 'max':
@@ -289,8 +325,19 @@ class SGPBlock(nn.Module):
         fc = self.fc(out)
         convw = self.convw(out)
         convkw = self.convkw(out)
+        #print(convw.shape, convkw.shape)
+        #beta = self.GatingMechanism(convw, convkw)
+        #print(beta.shape)
+
+
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
-        out = fc * phi + (convw + convkw) * psi + out
+        #gate = convw*beta + (1-beta)*convkw
+        #out = fc * phi + gate + out
+	summary = self.summarization(out)
+        print(summary.shape)
+        summary = torch.mean(summary, dim=1)
+        out_summary = self.summary_project(out)
+        out = fc * phi + (convw + convkw) * psi + out +out_summary * summary
 
         out = x * out_mask + self.drop_path_out(out)
         # FFN
