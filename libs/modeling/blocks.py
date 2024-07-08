@@ -253,10 +253,12 @@ class SGPBlock(nn.Module):
         self.convw = nn.Conv1d(n_embd, n_embd, kernel_size, stride=1, padding=kernel_size // 2, groups=n_embd)
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-	print('I am here')
-        self.GatingMechanism = GatingMechanism(n_embd, 32)
-	self.summarization = TokenSummarizationMHA(64, n_embd)
-	self.summary_project = Conv1d(n_embd, n_embd, stride=1, padding=9, groups=n_embd)
+
+        self.gating_mechanism = GatingMechanism(n_embd, 32)
+
+        self.summarization = TokenSummarizationMHA(64, n_embd)
+        self.summary_project = nn.Conv1d(n_embd, n_embd, stride=1, padding=0, groups=n_embd)
+
         # input
         if n_ds_stride > 1:
             if downsample_type == 'max':
@@ -325,20 +327,27 @@ class SGPBlock(nn.Module):
         fc = self.fc(out)
         convw = self.convw(out)
         convkw = self.convkw(out)
-        #print(convw.shape, convkw.shape)
-        #beta = self.GatingMechanism(convw, convkw)
-        #print(beta.shape)
-
-
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
-        #gate = convw*beta + (1-beta)*convkw
+
+
+
+        local_branch = (convw + convkw) * psi
+        # beta = self.gating_mechanism(convw, convkw)
+        # local_branch = convw*beta + (1.0 - beta)*convkw
         #out = fc * phi + gate + out
-	summary = self.summarization(out)
+
+        summary = self.summarization(out)
         print(summary.shape)
         summary = torch.mean(summary, dim=1)
         out_summary = self.summary_project(out)
-        out = fc * phi + (convw + convkw) * psi + out +out_summary * summary
 
+        # summary = 0.0
+
+        summary = out_summary * summary
+
+        out = fc * phi + local_branch + out + summary
+
+        # ========================
         out = x * out_mask + self.drop_path_out(out)
         # FFN
         out = out + self.drop_path_mlp(self.mlp(self.gn(out)))
