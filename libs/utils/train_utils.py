@@ -65,7 +65,7 @@ def make_optimizer(model, optimizer_config):
     decay = set()
     no_decay = set()
     whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D)
-    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm, TokenSummarizationMHA)
+    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm, TokenSummarizationMHA,torch.nn.MultiheadAttention)
 
     # loop over all modules / params
     for mn, m in model.named_modules():
