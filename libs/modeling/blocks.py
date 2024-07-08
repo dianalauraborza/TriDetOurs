@@ -356,7 +356,7 @@ class SGPBlock(nn.Module):
             # print('after mean ', summary.shape)
             summary = summary.permute(0, 2, 1)
             # print('after permute: ', summary.shape)
-            summary = torch.relu(self.summary_project(summary))
+            summary = torch.sigmoid(self.summary_project(summary))
             out_summary = self.summary_fc(out)
 
             summary = out_summary * summary
