@@ -12,6 +12,7 @@ import torch.optim as optim
 from .lr_schedulers import LinearWarmupMultiStepLR, LinearWarmupCosineAnnealingLR
 from .postprocessing import postprocess_results
 from ..modeling import MaskedConv1D, Scale, AffineDropPath, LayerNorm
+from ..modeling.blocks import TokenSummarizationMHA
 
 
 ################################################################################
@@ -64,7 +65,7 @@ def make_optimizer(model, optimizer_config):
     decay = set()
     no_decay = set()
     whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D)
-    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm)
+    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm, TokenSummarizationMHA)
 
     # loop over all modules / params
     for mn, m in model.named_modules():
