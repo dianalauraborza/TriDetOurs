@@ -349,7 +349,7 @@ class SGPBlock(nn.Module):
 
         if self.type == 'summary':
             summary = self.summarization(out)
-
+            print('out ', out.shape)
             # print(summary.shape)
             summary = torch.mean(summary, dim=1, keepdim=True)
             # print('after mean ', summary.shape)
