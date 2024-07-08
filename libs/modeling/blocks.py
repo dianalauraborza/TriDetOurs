@@ -342,7 +342,6 @@ class SGPBlock(nn.Module):
         # out = fc * phi + local_branch + out + summary
         psi = self.psi(out)
         if self.type == 'original':
-
             out = fc * phi + (convw + convkw) * psi + out
 
         if self.type == 'gating':
@@ -352,8 +351,11 @@ class SGPBlock(nn.Module):
 
         if self.type == 'summary':
             summary = self.summarization(out)
+
             print(summary.shape)
             summary = torch.mean(summary, dim=1, keepdim=True)
+            summary = summary.permute(0, 2, 1)
+            print(summary.shape)
             summary = torch.relu(self.summary_project(summary))
             out_summary = self.summary_fc(out)
 
