@@ -256,8 +256,9 @@ class SGPBlock(nn.Module):
 
         self.gating_mechanism = GatingMechanism(n_embd, 32)
 
-        self.summarization = TokenSummarizationMHA(64, n_embd)
-        self.summary_project = nn.Conv1d(n_embd, n_embd, stride=1, padding=0, groups=n_embd)
+        # self.summarization = TokenSummarizationMHA(64, n_embd)
+        # self.summary_project = nn.Conv1d(n_embd, n_embd, stride=1, padding=0, groups=n_embd)
+        # self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
         # input
         if n_ds_stride > 1:
@@ -331,21 +332,20 @@ class SGPBlock(nn.Module):
 
 
 
-        local_branch = (convw + convkw) * psi
-        # beta = self.gating_mechanism(convw, convkw)
-        # local_branch = convw*beta + (1.0 - beta)*convkw
+        # local_branch = (convw + convkw) * psi
+        beta = self.gating_mechanism(convw, convkw)
+        local_branch = convw*beta + (1.0 - beta)*convkw
         #out = fc * phi + gate + out
 
-        summary = self.summarization(out)
-        print(summary.shape)
-        summary = torch.mean(summary, dim=1)
-        out_summary = self.summary_project(out)
+        # summary = self.summarization(out)
+        # print(summary.shape)
+        # summary = torch.mean(summary, dim=1)
+        # summary = torch.relu(self.summary_project(summary))
+        # out_summary = self.summary_fc(out)
 
-        # summary = 0.0
+        # summary = out_summary * summary
 
-        summary = out_summary * summary
-
-        out = fc * phi + local_branch + out + summary
+        out = fc * phi + local_branch + out #+ summary
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
