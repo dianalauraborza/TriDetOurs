@@ -357,6 +357,7 @@ class SGPBlock(nn.Module):
             # print('after mean ', summary.shape)
             summary = summary.permute(0, 2, 1)
             out_sa = out.permute(0, 2, 1)
+            print(summary.shape, out_sa.shape)
             res = self.cross_attention(query=summary, key=out_sa, value=out_sa)[0]
             res = res.permute(0, 2, 1)
             # print('after permute: ', summary.shape)
