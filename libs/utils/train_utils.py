@@ -65,13 +65,15 @@ def make_optimizer(model, optimizer_config):
     decay = set()
     no_decay = set()
     whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D)
-    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm )
+    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm)
 
     # loop over all modules / params
     for mn, m in model.named_modules():
         for pn, p in m.named_parameters():
             fpn = '%s.%s' % (mn, pn) if mn else pn  # full param name
-            if pn.endswith('bias'):
+            if 'summarization' in pn:
+                no_decay.add(fpn)
+            elif pn.endswith('bias'):
                 # all biases will not be decayed
                 no_decay.add(fpn)
             elif pn.endswith('weight') and isinstance(m, whitelist_weight_modules):
@@ -85,9 +87,6 @@ def make_optimizer(model, optimizer_config):
                 no_decay.add(fpn)
             elif pn.endswith('rel_pe'):
                 # corner case for relative position encoding
-                no_decay.add(fpn)
-            elif 'summarization' in pn:
-                # summary no decay
                 no_decay.add(fpn)
 
     # validate that we considered every parameter
