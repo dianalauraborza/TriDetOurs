@@ -260,14 +260,14 @@ class SGPBlock(nn.Module):
             self.GatingMechanism = GatingMechanism(n_embd, 32)
 
         if self.type == 'summary':
-            self.summarization = TokenSummarizationMHA(64, n_embd)
+            self.summarization = TokenSummarizationMHA(1, n_embd)
             self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
             self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
         if self.type == 'summary+gating':
             self.GatingMechanism = GatingMechanism(n_embd, 32)
 
-            self.summarization = TokenSummarizationMHA(64, n_embd)
+            self.summarization = TokenSummarizationMHA(1, n_embd)
             self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
             self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
@@ -357,7 +357,7 @@ class SGPBlock(nn.Module):
         if self.type == 'summary':
             summary = self.summarization(out)
             # print(summary.shape)
-            summary = torch.mean(summary, dim=1, keepdim=True)
+            # summary = torch.max(summary, dim=1, keepdim=True)
             # print('after mean ', summary.shape)
             summary = summary.permute(0, 2, 1)
             # print('after permute: ', summary.shape)
@@ -371,7 +371,8 @@ class SGPBlock(nn.Module):
             summary = self.summarization(out)
 
             # print(summary.shape)
-            summary = torch.mean(summary, dim=1, keepdim=True)
+
+            # summary = torch.max(summary, dim=1, keepdim=True)
             # print('after mean ', summary.shape)
             summary = summary.permute(0, 2, 1)
             # print('after permute: ', summary.shape)
