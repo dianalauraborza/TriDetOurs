@@ -254,11 +254,11 @@ class SGPBlock(nn.Module):
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
-        self.gating_mechanism = GatingMechanism(n_embd, 32)
+        self.GatingMechanism = GatingMechanism(n_embd, 32)
 
-        self.summarization = TokenSummarizationMHA(64, n_embd)
-        self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-        self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+        # self.summarization = TokenSummarizationMHA(64, n_embd)
+        # self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+        # self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
         # input
         if n_ds_stride > 1:
@@ -330,7 +330,7 @@ class SGPBlock(nn.Module):
         convkw = self.convkw(out)
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
 
-        beta = self.gating_mechanism(convw, convkw)
+        beta = self.GatingMechanism(convw, convkw)
         gate = convw*beta + (1.0 - beta)*convkw
         out = fc * phi + gate + out
 
