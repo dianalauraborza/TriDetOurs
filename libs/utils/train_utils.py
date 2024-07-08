@@ -84,7 +84,8 @@ def make_optimizer(model, optimizer_config):
                 # weights of whitelist modules will be weight decayed
                 decay.add(fpn)
             elif pn.endswith('scale') and isinstance(m, (Scale, AffineDropPath)):
-                # corner case of our scale layer
+                # corner case
+                # of our scale layer
                 no_decay.add(fpn)
             elif pn.endswith('rel_pe'):
                 # corner case for relative position encoding

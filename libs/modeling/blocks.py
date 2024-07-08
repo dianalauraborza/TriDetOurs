@@ -254,7 +254,7 @@ class SGPBlock(nn.Module):
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
-        self.type = 'summary'
+        self.type = 'summary+gating'
 
         if self.type == 'gating':
             self.GatingMechanism = GatingMechanism(n_embd, 32)
@@ -263,6 +263,14 @@ class SGPBlock(nn.Module):
             self.summarization = TokenSummarizationMHA(64, n_embd)
             self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
             self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+
+        if self.type == 'summary+gating':
+            self.GatingMechanism = GatingMechanism(n_embd, 32)
+
+            self.summarization = TokenSummarizationMHA(64, n_embd)
+            self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+            self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+
 
         print('type ', self.type)
 
@@ -335,10 +343,7 @@ class SGPBlock(nn.Module):
         convkw = self.convkw(out)
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
 
-
         # out = fc * phi + (convw + convkw) * psi + out
-
-
         # out = fc * phi + local_branch + out + summary
         psi = self.psi(out)
         if self.type == 'original':
@@ -351,7 +356,6 @@ class SGPBlock(nn.Module):
 
         if self.type == 'summary':
             summary = self.summarization(out)
-
             # print(summary.shape)
             summary = torch.mean(summary, dim=1, keepdim=True)
             # print('after mean ', summary.shape)
@@ -362,6 +366,23 @@ class SGPBlock(nn.Module):
 
             summary = out_summary * summary
             out = fc * phi + (convw + convkw) * psi + out + summary
+
+        if self.type == 'summary+gating':
+            summary = self.summarization(out)
+
+            # print(summary.shape)
+            summary = torch.mean(summary, dim=1, keepdim=True)
+            # print('after mean ', summary.shape)
+            summary = summary.permute(0, 2, 1)
+            # print('after permute: ', summary.shape)
+            summary = torch.relu(self.summary_project(summary))
+            out_summary = self.summary_fc(out)
+
+            summary = out_summary * summary
+            beta = self.GatingMechanism(convw, convkw)
+            gate = convw * beta + (1.0 - beta) * convkw
+            out = fc * phi + gate + out + summary
+            # out = fc * phi + (convw + convkw) * psi + out + summary
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
