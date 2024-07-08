@@ -254,11 +254,17 @@ class SGPBlock(nn.Module):
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
-        self.GatingMechanism = GatingMechanism(n_embd, 32)
+        self.type = 'original'
 
-        # self.summarization = TokenSummarizationMHA(64, n_embd)
-        # self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-        # self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+        if self.type == 'gating':
+            self.GatingMechanism = GatingMechanism(n_embd, 32)
+
+        if self.type == 'summary':
+            self.summarization = TokenSummarizationMHA(64, n_embd)
+            self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+            self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+
+        print('type ', self.type)
 
         # input
         if n_ds_stride > 1:
@@ -324,16 +330,13 @@ class SGPBlock(nn.Module):
         ).detach()
 
         out = self.ln(x)
-        psi = self.psi(out)
         fc = self.fc(out)
         convw = self.convw(out)
         convkw = self.convkw(out)
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
 
-        # beta = self.GatingMechanism(convw, convkw)
-        # gate = convw*beta + (1.0 - beta)*convkw
-        # out = fc * phi + gate + out
-        out = fc * phi + (convw + convkw) * psi + out
+
+        # out = fc * phi + (convw + convkw) * psi + out
 
         # summary = self.summarization(out)
         # print(summary.shape)
@@ -343,8 +346,17 @@ class SGPBlock(nn.Module):
         # out_summary = self.summary_fc(out)
         #
         # summary = out_summary * summary
-        #
+
         # out = fc * phi + local_branch + out + summary
+
+        if self.type == 'original':
+            psi = self.psi(out)
+            out = fc * phi + (convw + convkw) * psi + out
+
+        if self.type == 'gating':
+            beta = self.GatingMechanism(convw, convkw)
+            gate = convw * beta + (1.0 - beta) * convkw
+            out = fc * phi + gate + out
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
