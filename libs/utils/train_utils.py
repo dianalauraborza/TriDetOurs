@@ -64,8 +64,8 @@ def make_optimizer(model, optimizer_config):
     # see https://github.com/karpathy/minGPT/blob/master/mingpt/model.py#L134
     decay = set()
     no_decay = set()
-    whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D)
-    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm, TokenSummarizationMHA)
+    whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D, TokenSummarizationMHA)
+    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm)
 
     # loop over all modules / params
     for mn, m in model.named_modules():
@@ -73,7 +73,7 @@ def make_optimizer(model, optimizer_config):
             fpn = '%s.%s' % (mn, pn) if mn else pn  # full param name
             print(fpn)
             if 'summarization' in pn:
-                no_decay.add(fpn)
+                decay.add(fpn)
             elif pn.endswith('bias'):
                 # all biases will not be decayed
                 no_decay.add(fpn)
