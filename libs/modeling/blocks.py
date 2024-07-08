@@ -350,13 +350,13 @@ class SGPBlock(nn.Module):
 
         if self.type == 'summary':
             summary = self.summarization(out)
-            print('out ', out.shape)
+            # print('out ', out.shape)
             # print(summary.shape)
             summary = torch.mean(summary, dim=1, keepdim=True)
             # print('after mean ', summary.shape)
             summary = summary.permute(0, 2, 1)
             # print('after permute: ', summary.shape)
-            summary = torch.sigmoid(self.summary_project(summary))
+            summary = torch.relu(self.summary_project(summary))
             out_summary = self.summary_fc(out)
 
             summary = out_summary * summary
