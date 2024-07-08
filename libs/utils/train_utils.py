@@ -64,8 +64,8 @@ def make_optimizer(model, optimizer_config):
     # see https://github.com/karpathy/minGPT/blob/master/mingpt/model.py#L134
     decay = set()
     no_decay = set()
-    whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D, TokenSummarizationMHA)
-    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm)
+    whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D)
+    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm, TokenSummarizationMHA)
 
     # loop over all modules / params
     for mn, m in model.named_modules():
@@ -80,7 +80,7 @@ def make_optimizer(model, optimizer_config):
             elif pn.endswith('weight') and isinstance(m, whitelist_weight_modules):
                 # weights of whitelist modules will be weight decayed
                 decay.add(fpn)
-            elif pn.endswith('weight') and isinstance(m, blacklist_weight_modules):
+            elif pn.endswith('weight') and isinstance(m, blacklist_weight_modules) :
                 # weights of blacklist modules will NOT be weight decayed
                 no_decay.add(fpn)
             elif pn.endswith('scale') and isinstance(m, (Scale, AffineDropPath)):
