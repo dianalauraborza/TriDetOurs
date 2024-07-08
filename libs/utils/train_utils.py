@@ -71,7 +71,7 @@ def make_optimizer(model, optimizer_config):
     for mn, m in model.named_modules():
         for pn, p in m.named_parameters():
             fpn = '%s.%s' % (mn, pn) if mn else pn  # full param name
-            print(fpn)
+            # print(fpn)
             if 'summarization' in pn:
                 no_decay.add(fpn)
             elif pn.endswith('bias'):
