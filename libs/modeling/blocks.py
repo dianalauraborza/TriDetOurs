@@ -330,22 +330,20 @@ class SGPBlock(nn.Module):
         convkw = self.convkw(out)
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
 
+        beta = self.gating_mechanism(convw, convkw)
+        gate = convw*beta + (1.0 - beta)*convkw
+        out = fc * phi + gate + out
 
-
-        local_branch = (convw + convkw) * psi
-        # beta = self.gating_mechanism(convw, convkw)
-        # local_branch = convw*beta + (1.0 - beta)*convkw
-        #out = fc * phi + gate + out
-
-        summary = self.summarization(out)
-        print(summary.shape)
-        summary = torch.mean(summary, dim=1)
-        summary = torch.relu(self.summary_project(summary))
-        out_summary = self.summary_fc(out)
-
-        summary = out_summary * summary
-
-        out = fc * phi + local_branch + out + summary
+        # summary = self.summarization(out)
+        # print(summary.shape)
+        # local_branch = (convw + convkw) * psi
+        # summary = torch.mean(summary, dim=1)
+        # summary = torch.relu(self.summary_project(summary))
+        # out_summary = self.summary_fc(out)
+        #
+        # summary = out_summary * summary
+        #
+        # out = fc * phi + local_branch + out + summary
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
