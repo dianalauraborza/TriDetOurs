@@ -348,9 +348,9 @@ class SGPBlock(nn.Module):
         # summary = out_summary * summary
 
         # out = fc * phi + local_branch + out + summary
-
+        psi = self.psi(out)
         if self.type == 'original':
-            psi = self.psi(out)
+
             out = fc * phi + (convw + convkw) * psi + out
 
         if self.type == 'gating':
