@@ -365,7 +365,7 @@ class SGPBlock(nn.Module):
             out_summary = self.summary_fc(out)
 
             summary = out_summary * summary
-            out = fc * phi + (convw + convkw) * psi + out + summary
+            out = (convw + convkw) * psi + out + summary #+ fc * phi
 
         if self.type == 'summary+gating':
             summary = self.summarization(out)
@@ -382,7 +382,7 @@ class SGPBlock(nn.Module):
             summary = out_summary * summary
             beta = self.GatingMechanism(convw, convkw)
             gate = convw * beta + (1.0 - beta) * convkw
-            out = fc * phi + gate + out + summary
+            out =  gate + out + summary #+ fc * phi 
             # out = fc * phi + (convw + convkw) * psi + out + summary
 
         # ========================
