@@ -6,6 +6,19 @@ from .weight_init import trunc_normal_
 #bash tools/thumos_i3d_script.sh 0
 #python3 eval.py configs/thumos_i3d.yaml ckpt/thumos_i3d_pretrained/epoch_039.pth.tar
 
+class ArtificialNN(nn.Module):
+    def __init__(self, num_tokens):
+        super(ArtificialNN, self).__init__()
+        self.linear1 = nn.linear(num_tokens, 32)
+        self.linear2 = nn.linear(32, 1)
+
+    def forward(self, x):
+        out = self.linear1(x.shape[2])
+        out = self.linear2(out)
+        return out
+
+
+
 class TokenSummarizationMHA(nn.Module):
     def __init__(self, num_tokens, dim=256, num_heads=8, dropout=0.1):
         super(TokenSummarizationMHA, self).__init__()
@@ -253,6 +266,7 @@ class SGPBlock(nn.Module):
         self.convw = nn.Conv1d(n_embd, n_embd, kernel_size, stride=1, padding=kernel_size // 2, groups=n_embd)
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+        self.ArtificialNN = ArtificialNN(n_embd)
 
         self.type = 'summary'
 
@@ -263,6 +277,8 @@ class SGPBlock(nn.Module):
             self.summarization = TokenSummarizationMHA(64, n_embd)
             self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
             self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+
+            se
 
         print('type ', self.type)
 
