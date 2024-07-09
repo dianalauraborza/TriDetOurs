@@ -3,26 +3,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from .weight_init import trunc_normal_
-#bash tools/thumos_i3d_script.sh 0
-#python3 eval.py configs/thumos_i3d.yaml ckpt/thumos_i3d_pretrained/epoch_039.pth.tar
 
-class TokenSummarizationMHA(nn.Module):
-    def __init__(self, num_tokens, dim=256, num_heads=8, dropout=0.1):
-        super(TokenSummarizationMHA, self).__init__()
-        self.num_tokens = num_tokens
-        self.num_heads = num_heads
-        self.dim = dim
-        self.attn = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, dropout=dropout, batch_first=True)
-        self.tokens = nn.Parameter(torch.randn(1, self.num_tokens, self.dim) * 0.02)
-
-
-    def forward(self, v):
-        v = torch.permute(v, (0, 2, 1)) # permute from (dim, T) to (T, dim)
-        bs, t, d = v.shape
-        tokens = self.tokens.expand(bs, -1, -1)
-        attn_output, _ = self.attn(query=tokens, key=v, value=v)
-
-        return attn_output
 
 class GatingMechanism(nn.Module):
     def __init__(self, output_dim, hidden_dim):
@@ -30,13 +11,14 @@ class GatingMechanism(nn.Module):
         self.fc1 = nn.Conv1d(output_dim * 2, hidden_dim, kernel_size=1, stride=1, padding=0)
         self.fc2 = nn.Conv1d(hidden_dim, 1, kernel_size=1, stride=1, padding=0)
 
-
     def forward(self, output1, output2):
         combined_outputs = torch.cat((output1, output2), dim=1)
         hidden = F.relu(self.fc1(combined_outputs))
         gate = torch.sigmoid(self.fc2(hidden))
-        #print('I am here: ', gate.shape)
+        # print('I am here: ', gate.shape)
         return gate
+
+
 
 class MaskedConv1D(nn.Module):
     """
@@ -253,18 +235,7 @@ class SGPBlock(nn.Module):
         self.convw = nn.Conv1d(n_embd, n_embd, kernel_size, stride=1, padding=kernel_size // 2, groups=n_embd)
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-
-        self.type = 'gating'
-
-        if self.type == 'gating':
-            self.GatingMechanism = GatingMechanism(n_embd, 32)
-
-        if self.type == 'summary':
-            self.summarization = TokenSummarizationMHA(64, n_embd)
-            self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-            self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-
-        print('type ', self.type)
+        self.GatingMechanism = GatingMechanism(n_embd, 32)
 
         # input
         if n_ds_stride > 1:
@@ -330,40 +301,16 @@ class SGPBlock(nn.Module):
         ).detach()
 
         out = self.ln(x)
+        psi = self.psi(out)
         fc = self.fc(out)
         convw = self.convw(out)
         convkw = self.convkw(out)
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
+        #out = fc * phi + (convw + convkw) * psi + out
+        beta = self.GatingMechanism(convw, convkw)
+        local_branch = beta*convw + (1-beta) * convkw
+        out = fc * phi + local_branch + out
 
-
-        # out = fc * phi + (convw + convkw) * psi + out
-
-
-        # out = fc * phi + local_branch + out + summary
-        psi = self.psi(out)
-        if self.type == 'original':
-            out = fc * phi + (convw + convkw) * psi + out
-
-        if self.type == 'gating':
-            beta = self.GatingMechanism(convw, convkw)
-            gate = convw * beta + (1.0 - beta) * convkw
-            out = fc * phi + gate + out
-
-        if self.type == 'summary':
-            summary = self.summarization(out)
-
-            # print(summary.shape)
-            summary = torch.mean(summary, dim=1, keepdim=True)
-            # print('after mean ', summary.shape)
-            summary = summary.permute(0, 2, 1)
-            # print('after permute: ', summary.shape)
-            summary = torch.relu(self.summary_project(summary))
-            out_summary = self.summary_fc(out)
-
-            summary = out_summary * summary
-            out = fc * phi + (convw + convkw) * psi + out + summary
-
-        # ========================
         out = x * out_mask + self.drop_path_out(out)
         # FFN
         out = out + self.drop_path_mlp(self.mlp(self.gn(out)))
