@@ -356,7 +356,7 @@ class SGPBlock(nn.Module):
             summary = self.summarization(out)
             print('summary shape ', summary.shape)
             summary_mean = torch.mean(summary, dim=1, keepdim=False)
-            summary_max = torch.max(summary, dim=1, keepdim=False)
+            summary_max = torch.max(summary, dim=1, keepdim=False)[0]
             print('summary max, mean ', summary_max.shape, summary_mean.shape)
             summary_mean = self.shared_ann(summary_mean)
             summary_max = self.shared_ann(summary_max)
