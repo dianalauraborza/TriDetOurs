@@ -265,7 +265,7 @@ class SGPBlock(nn.Module):
 
 
             # self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-            # self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+            self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
         print('type ', self.type)
 
