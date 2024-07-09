@@ -12,7 +12,6 @@ import torch.optim as optim
 from .lr_schedulers import LinearWarmupMultiStepLR, LinearWarmupCosineAnnealingLR
 from .postprocessing import postprocess_results
 from ..modeling import MaskedConv1D, Scale, AffineDropPath, LayerNorm
-from ..modeling.blocks import TokenSummarizationMHA
 
 
 ################################################################################
@@ -65,24 +64,21 @@ def make_optimizer(model, optimizer_config):
     decay = set()
     no_decay = set()
     whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D)
-    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm, TokenSummarizationMHA)
+    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm)
 
     # loop over all modules / params
     for mn, m in model.named_modules():
         for pn, p in m.named_parameters():
             fpn = '%s.%s' % (mn, pn) if mn else pn  # full param name
-            # print(fpn)
-            if 'summarization' in pn:
-                no_decay.add(fpn)
-            elif pn.endswith('bias'):
+            if pn.endswith('bias'):
                 # all biases will not be decayed
                 no_decay.add(fpn)
+            elif pn.endswith('weight') and isinstance(m, whitelist_weight_modules):
+                # weights of whitelist modules will be weight decayed
+                decay.add(fpn)
             elif pn.endswith('weight') and isinstance(m, blacklist_weight_modules):
                 # weights of blacklist modules will NOT be weight decayed
                 no_decay.add(fpn)
-            elif pn.endswith('weight') and isinstance(m, whitelist_weight_modules) and 'summarization' not in fpn:
-                # weights of whitelist modules will be weight decayed
-                decay.add(fpn)
             elif pn.endswith('scale') and isinstance(m, (Scale, AffineDropPath)):
                 # corner case of our scale layer
                 no_decay.add(fpn)
