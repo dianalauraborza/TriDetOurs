@@ -258,7 +258,8 @@ class SGPBlock(nn.Module):
         self.GatingMechanism = GatingMechanism(n_embd, 32)
 
         self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
-        self.shared_ann = nn.Linear(n_embd, n_embd)
+        self.shared_ann1 = nn.Linear(n_embd, n_embd//2)
+        self.shared_ann2 = nn.Linear(n_embd//2, n_embd)
         self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
 
@@ -338,8 +339,11 @@ class SGPBlock(nn.Module):
         summary_mean = torch.mean(summary, dim=1, keepdim=False)
         summary_max = torch.max(summary, dim=1, keepdim=False)[0]
 
-        summary_mean = self.shared_ann(summary_mean)
-        summary_max = self.shared_ann(summary_max)
+        summary_mean = self.shared_ann1(summary_mean)
+        summary_mean = self.shared_ann2(summary_mean)
+
+        summary_max = self.shared_ann1(summary_max)
+        summary_max = self.shared_ann2(summary_max)
 
         weights = torch.sigmoid(summary_mean + summary_max)
         weights = weights.unsqueeze(axis=-1)
