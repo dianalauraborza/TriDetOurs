@@ -226,7 +226,8 @@ class SGPBlock(nn.Module):
             path_pdrop=0.0,  # drop path rate
             act_layer=nn.GELU,  # nonlinear activation used after conv, default ReLU,
             downsample_type='max',
-            init_conv_vars=1  # init gaussian variance for the weight
+            init_conv_vars=1 , # init gaussian variance for the weight
+            num_summary_tokens = 64
     ):
         super().__init__()
         # must use odd sized kernel
@@ -254,21 +255,12 @@ class SGPBlock(nn.Module):
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
-        self.type = 'summary'
+        self.GatingMechanism = GatingMechanism(n_embd, 32)
 
-        if self.type == 'gating':
-            self.GatingMechanism = GatingMechanism(n_embd, 32)
+        self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
+        self.shared_ann = nn.Linear(n_embd, n_embd)
+        self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
-        if self.type == 'summary':
-            self.summarization = TokenSummarizationMHA(64, n_embd)
-            ratio = 2
-            self.shared_ann1 = nn.Linear(n_embd, n_embd//ratio)
-            self.shared_ann2 = nn.Linear(n_embd//ratio, n_embd)
-
-            # self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-            self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-
-        print('type ', self.type)
 
         # input
         if n_ds_stride > 1:
@@ -339,43 +331,22 @@ class SGPBlock(nn.Module):
         convkw = self.convkw(out)
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
 
+        beta = self.GatingMechanism(convw, convkw)
+        local_branch = convw * beta + (1.0 - beta) * convkw
 
-        # out = fc * phi + (convw + convkw) * psi + out
+        summary = self.summarization(out)
+        summary_mean = torch.mean(summary, dim=1, keepdim=False)
+        summary_max = torch.max(summary, dim=1, keepdim=False)[0]
 
+        summary_mean = self.shared_ann(summary_mean)
+        summary_max = self.shared_ann(summary_max)
 
-        # out = fc * phi + local_branch + out + summary
-        psi = self.psi(out)
-        if self.type == 'original':
-            out = fc * phi + (convw + convkw) * psi + out
+        weights = torch.sigmoid(summary_mean + summary_max)
+        weights = weights.unsqueeze(axis=-1)
+        out_summary = self.summary_fc(out)
 
-        if self.type == 'gating':
-            beta = self.GatingMechanism(convw, convkw)
-            gate = convw * beta + (1.0 - beta) * convkw
-            out = fc * phi + gate + out
-
-        if self.type == 'summary':
-            summary = self.summarization(out)
-            # print('summary shape ', summary.shape)
-            summary_mean = torch.mean(summary, dim=1, keepdim=False)
-            summary_max = torch.max(summary, dim=1, keepdim=False)[0]
-            # print('summary max, mean ', summary_max.shape, summary_mean.shape)
-            summary_mean = self.shared_ann1(summary_mean)
-            summary_mean = self.shared_ann2(summary_mean)
-
-            summary_max = self.shared_ann1(summary_max)
-            summary_max = self.shared_ann2(summary_max)
-
-            weights = torch.sigmoid(summary_mean+summary_max)
-            # print('weights shape ', weights.shape)
-
-            weights = weights.unsqueeze(axis=-1)
-
-            # print('weights shape after unsqueze: ', weights.shape, out.shape)
-
-            out_summary = self.summary_fc(out)
-
-            summary = out_summary * weights
-            out = fc * phi + (convw + convkw) * psi + out + summary
+        global_branch = out_summary * weights
+        out = local_branch + out + global_branch #+ fc * phi
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
