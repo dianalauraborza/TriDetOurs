@@ -306,10 +306,10 @@ class SGPBlock(nn.Module):
         convw = self.convw(out)
         convkw = self.convkw(out)
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
-        #out = fc * phi + (convw + convkw) * psi + out
-        beta = self.GatingMechanism(convw, convkw)
-        local_branch = beta*convw + (1-beta) * convkw
-        out = fc * phi + local_branch + out
+        out = fc * phi + (convw + convkw) * psi + out
+        #beta = self.GatingMechanism(convw, convkw)
+        #local_branch = beta*convw + (1-beta) * convkw
+        #out = fc * phi + local_branch + out
 
         out = x * out_mask + self.drop_path_out(out)
         # FFN
