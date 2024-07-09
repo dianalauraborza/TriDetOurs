@@ -358,7 +358,7 @@ class SGPBlock(nn.Module):
         else:
             summary = 0
 
-        out = (convw + convkw) * psi + out + summary
+        out = (convw + convkw) * psi + out + summary + fc * phi
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
