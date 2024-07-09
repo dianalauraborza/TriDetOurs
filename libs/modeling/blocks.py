@@ -227,7 +227,7 @@ class SGPBlock(nn.Module):
             act_layer=nn.GELU,  # nonlinear activation used after conv, default ReLU,
             downsample_type='max',
             init_conv_vars=1,  # init gaussian variance for the weight
-            num_summary_tokens =64
+            num_summary_tokens=0
     ):
         super().__init__()
         # must use odd sized kernel
@@ -254,13 +254,13 @@ class SGPBlock(nn.Module):
         self.convw = nn.Conv1d(n_embd, n_embd, kernel_size, stride=1, padding=kernel_size // 2, groups=n_embd)
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-
+        self.num_summary_tokens = num_summary_tokens
         self.type = 'summary'
 
         if self.type == 'gating':
             self.GatingMechanism = GatingMechanism(n_embd, 32)
 
-        if self.type == 'summary':
+        if self.type == 'summary' and num_summary_tokens > 0:
             self.cross_attention = nn.MultiheadAttention(n_embd, 4, bias=False, batch_first=True)
             self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
             self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
@@ -349,25 +349,16 @@ class SGPBlock(nn.Module):
             gate = convw * beta + (1.0 - beta) * convkw
             out = fc * phi + gate + out
 
-        if self.type == 'summary':
+        if self.type == 'summary' and self.num_summary_tokens > 0:
             summary = self.summarization(out)
-            # print('out ', out.shape)
-            # print(summary.shape)
-            # summary = torch.mean(summary, dim=1, keepdim=True)
-            # print('after mean ', summary.shape)
-            # summary = summary.permute(0, 2, 1)
             out_sa = out.permute(0, 2, 1)
-            # print(summary.shape, out_sa.shape)
             res = self.cross_attention(query=out_sa, key=summary, value=summary)[0]
-
             res = res.permute(0, 2, 1)
-
-            # print('after permute: ', summary.shape)
             summary = torch.relu(self.summary_project(res))
-            # print(summary.shape, res.shape, out.shape)
+        else:
+            summary = 0
 
-
-            out = (convw + convkw) * psi + out + summary
+        out = (convw + convkw) * psi + out + summary
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
