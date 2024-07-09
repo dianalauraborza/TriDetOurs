@@ -261,8 +261,9 @@ class SGPBlock(nn.Module):
 
         if self.type == 'summary':
             self.summarization = TokenSummarizationMHA(64, n_embd)
-            self.shared_ann = nn.Linear(n_embd, n_embd)
-
+            ratio = 2
+            self.shared_ann1 = nn.Linear(n_embd, n_embd//ratio)
+            self.shared_ann2 = nn.Linear(n_embd//ratio, n_embd)
 
             # self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
             self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
@@ -358,8 +359,11 @@ class SGPBlock(nn.Module):
             summary_mean = torch.mean(summary, dim=1, keepdim=False)
             summary_max = torch.max(summary, dim=1, keepdim=False)[0]
             # print('summary max, mean ', summary_max.shape, summary_mean.shape)
-            summary_mean = self.shared_ann(summary_mean)
-            summary_max = self.shared_ann(summary_max)
+            summary_mean = self.shared_ann1(summary_mean)
+            summary_mean = self.shared_ann2(summary_mean)
+
+            summary_max = self.shared_ann1(summary_max)
+            summary_max = self.shared_ann2(summary_max)
 
             weights = torch.sigmoid(summary_mean+summary_max)
             # print('weights shape ', weights.shape)
