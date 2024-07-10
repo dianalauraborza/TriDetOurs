@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
+import math
 from .weight_init import trunc_normal_
 #bash tools/thumos_i3d_script.sh 0
 #python3 eval.py configs/thumos_i3d.yaml ckpt/thumos_i3d_pretrained/epoch_039.pth.tar
@@ -13,8 +14,10 @@ class TokenSummarizationMHA(nn.Module):
         self.num_heads = num_heads
         self.dim = dim
         self.attn = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, dropout=dropout, batch_first=True)
-        self.tokens = nn.Parameter(torch.randn(1, self.num_tokens, self.dim) * 0.02)
+        # self.tokens = nn.Parameter(torch.randn(1, self.num_tokens, self.dim) * 0.02)
 
+        self.tokens = nn.Parameter(torch.randn(1, self.num_tokens, self.dim))
+        nn.init.kaiming_uniform_(self.tokens, a=math.sqrt(5))  # Kaiming initialization
 
     def forward(self, v):
         v = torch.permute(v, (0, 2, 1)) # permute from (dim, T) to (T, dim)
