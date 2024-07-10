@@ -259,7 +259,7 @@ class SGPBlock(nn.Module):
 
         # self.GatingMechanism = GatingMechanism(n_embd, 32)
 
-        self.attention_gating = nn.MultiheadAttention(n_embd, num_heads=8, batch_first=True)
+        self.attention_gating = nn.MultiheadAttention(n_embd, num_heads=1, batch_first=True)
 
         self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
         self.shared_ann = nn.Linear(n_embd, n_embd)
