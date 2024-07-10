@@ -341,7 +341,7 @@ class SGPBlock(nn.Module):
         summary_mean = self.shared_ann(summary_mean)
         summary_max = self.shared_ann(summary_max)
 
-        weights = torch.sigmoid(summary_mean + summary_max)
+        weights = torch.nn.GELU(summary_mean + summary_max)
         weights = weights.unsqueeze(axis=-1)
         out_summary = self.summary_fc(out)
 
