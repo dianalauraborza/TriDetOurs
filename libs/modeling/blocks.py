@@ -263,7 +263,7 @@ class SGPBlock(nn.Module):
         self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
         self.shared_ann = nn.Linear(n_embd, n_embd)
         self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-        self.gelu =  nn.GELU()
+        self.gelu = nn.GELU()
 
         # input
         if n_ds_stride > 1:
@@ -344,7 +344,7 @@ class SGPBlock(nn.Module):
         summary_mean = self.shared_ann(summary_mean)
         summary_max = self.shared_ann(summary_max)
 
-        weights = self.gelu(summary_mean + summary_max)
+        weights = torch.sigmoid(summary_mean + summary_max)
         weights = weights.unsqueeze(axis=-1)
         out_summary = self.summary_fc(out)
 
