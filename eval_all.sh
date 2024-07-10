@@ -19,7 +19,7 @@ CHECKPOINTS=$(ls $ROOT_DIR/epoch_*.pth.tar | sort -t _ -k2,2 -k3,3n | tail -n $N
 for CHECKPOINT in $CHECKPOINTS
 do
     echo "Running eval.py with checkpoint $CHECKPOINT"
-    #python3 eval.py $CONFIG $CHECKPOINT
+    python3 eval.py $CONFIG $CHECKPOINT
 done
 
 
