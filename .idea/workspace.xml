@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="9eed0ebb-b615-4692-bb93-8a256bd24e81" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/configs/anet_tsp.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/configs/anet_tsp.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/epic_slowfast_noun.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/configs/epic_slowfast_noun.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
