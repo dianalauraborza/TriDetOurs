@@ -1,3 +1,5 @@
+from ctypes.macholib.dyld import framework_find
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -255,7 +257,9 @@ class SGPBlock(nn.Module):
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
-        self.GatingMechanism = GatingMechanism(n_embd, 32)
+        # self.GatingMechanism = GatingMechanism(n_embd, 32)
+
+        self.attention_gating = nn.MultiheadAttention(n_embd, heads=8, batch_first=True)
 
         self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
         self.shared_ann = nn.Linear(n_embd, n_embd)
@@ -331,8 +335,20 @@ class SGPBlock(nn.Module):
         convkw = self.convkw(out)
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
 
-        beta = self.GatingMechanism(convw, convkw)
-        local_branch = convw * beta + (1.0 - beta) * convkw
+        # beta = self.GatingMechanism(convw, convkw)
+        # local_branch = convw * beta + (1.0 - beta) * convkw
+        frame_query = out.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
+        frame_query = frame_query.view(frame_query.shape[0]*frame_query.shape[-1], frame_query.shape[1], frame_query.shape[2])
+        convw = convw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
+        convkw = convkw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
+        kv = torch.cat((convw, convkw), dim=1)  # Shape: [bs, 2, embedding_size, T]
+        kv = kv.view(kv.shape[0]*kv.shape[-1], kv.shape[1], kv.shape[2])
+        local_branch = self.attention_gating(frame_query, kv, kv)[0]
+
+        local_branch = local_branch.squeeze()
+        local_branch = local_branch.view(out.shape[0], out.shape[1], out.shape[2])
+
+
 
         summary = self.summarization(out)
         summary_mean = torch.mean(summary, dim=1, keepdim=False)
