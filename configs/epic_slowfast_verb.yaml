@@ -2,8 +2,8 @@ dataset_name: epic
 train_split: ['training']
 val_split: ['validation']
 dataset: {
-  json_file: ./data/epic_kitchens/annotations/epic_kitchens_100_verb.json,
-  feat_folder: ./data/epic_kitchens/features,
+  file: /data/stars/user/dborza/work/TriDet/data/epic_kitchens/annotations/epic_kitchens_100_verb.json,
+  feat_folder: /data/stars/user/dborza/work/TriDet/data/epic_kitchens/features,
   file_prefix: ~,
   file_ext: .npz,
   num_classes: 97,

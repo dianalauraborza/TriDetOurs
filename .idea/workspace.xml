@@ -7,6 +7,7 @@
     <list default="true" id="9eed0ebb-b615-4692-bb93-8a256bd24e81" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/configs/epic_slowfast_noun.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/configs/epic_slowfast_noun.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/epic_slowfast_verb.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/configs/epic_slowfast_verb.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,14 +25,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;new__code&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/user/areka/home/Desktop/nef/TriDetOurs&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "new__code",
+    "last_opened_file_path": "/user/areka/home/Desktop/nef/TriDetOurs"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
