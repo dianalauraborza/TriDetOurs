@@ -65,7 +65,7 @@ def make_optimizer(model, optimizer_config):
     decay = set()
     no_decay = set()
     whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, MaskedConv1D)
-    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm, TokenSummarizationMHA)
+    blacklist_weight_modules = (LayerNorm, torch.nn.GroupNorm, TokenSummarizationMHA, torch.nn.MultiheadAttention)
 
     # loop over all modules / params
     for mn, m in model.named_modules():
@@ -80,7 +80,8 @@ def make_optimizer(model, optimizer_config):
             elif pn.endswith('weight') and isinstance(m, blacklist_weight_modules):
                 # weights of blacklist modules will NOT be weight decayed
                 no_decay.add(fpn)
-            elif pn.endswith('weight') and isinstance(m, whitelist_weight_modules) and 'summarization' not in fpn:
+            elif pn.endswith('weight') and isinstance(m, whitelist_weight_modules) and 'summarization' not in fpn\
+                    and 'attention_gating' not in fpn:
                 # weights of whitelist modules will be weight decayed
                 decay.add(fpn)
             elif pn.endswith('scale') and isinstance(m, (Scale, AffineDropPath)):
