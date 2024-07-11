@@ -344,7 +344,7 @@ class SGPBlock(nn.Module):
         convw = convw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
         convkw = convkw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
         frame = self.global_fc(out)
-        frame = out.unsqueeze(frame)
+        frame = frame.unsqueeze(1)
         kv = torch.cat((frame, convw, convkw), dim=1)  # Shape: [bs, 3, embedding_size, T]
         kv = kv.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 3, embedding_size]
         kv = kv.view(kv.shape[0] * kv.shape[1], kv.shape[2], kv.shape[3])  # Shape: [bs * T, 3, embedding_size]
