@@ -338,13 +338,15 @@ class SGPBlock(nn.Module):
         # beta = self.GatingMechanism(convw, convkw)
         # local_branch = convw * beta + (1.0 - beta) * convkw
         frame_query = out.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
+        frame = frame_query
         frame_query = frame_query.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 1, embedding_size]
         frame_query = frame_query.view(frame_query.shape[0]*frame_query.shape[1], frame_query.shape[2], frame_query.shape[3])  # Shape: [bs * T, 1, embedding_size]
 
         convw = convw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
         convkw = convkw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
-        kv = torch.cat((convw, convkw), dim=1)  # Shape: [bs, 2, embedding_size, T]
-        kv = kv.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 2, embedding_size]
+
+        kv = torch.cat((convw, convkw, frame), dim=1)  # Shape: [bs, 3, embedding_size, T]
+        kv = kv.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 3, embedding_size]
         kv = kv.view(kv.shape[0] * kv.shape[1], kv.shape[2], kv.shape[3])  # Shape: [bs * T, 2, embedding_size]
 
         local_branch = self.attention_gating(frame_query, kv, kv)[0]
