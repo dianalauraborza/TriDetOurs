@@ -343,9 +343,11 @@ class SGPBlock(nn.Module):
 
         convw = convw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
         convkw = convkw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
-        kv = torch.cat((convw, convkw), dim=1)  # Shape: [bs, 2, embedding_size, T]
-        kv = kv.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 2, embedding_size]
-        kv = kv.view(kv.shape[0] * kv.shape[1], kv.shape[2], kv.shape[3])  # Shape: [bs * T, 2, embedding_size]
+        frame = self.global_fc(out)
+        frame = out.unsqueeze(frame)
+        kv = torch.cat((frame, convw, convkw), dim=1)  # Shape: [bs, 3, embedding_size, T]
+        kv = kv.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 3, embedding_size]
+        kv = kv.view(kv.shape[0] * kv.shape[1], kv.shape[2], kv.shape[3])  # Shape: [bs * T, 3, embedding_size]
 
         local_branch = self.attention_gating(frame_query, kv, kv)[0]
         local_branch = local_branch.view(out.shape[0], out.shape[-1], out.shape[1]).permute(0, 2, 1).contiguous()
