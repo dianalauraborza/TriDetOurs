@@ -366,7 +366,7 @@ class SGPBlock(nn.Module):
 
         global_branch = out_summary * weights
         # out = local_branch + out + global_branch + local_branch1 #+ fc * phi
-        out = local_branch + out + local_branch1 + fc * phi
+        out = local_branch + out  + fc * phi
         # ========================
         out = x * out_mask + self.drop_path_out(out)
         # FFN
