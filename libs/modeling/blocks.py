@@ -257,7 +257,7 @@ class SGPBlock(nn.Module):
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
-        # self.GatingMechanism = GatingMechanism(n_embd, 32)
+        self.GatingMechanism = GatingMechanism(n_embd, 32)
 
         self.attention_gating = nn.MultiheadAttention(n_embd, num_heads=8, batch_first=True)
 
@@ -335,8 +335,9 @@ class SGPBlock(nn.Module):
         convkw = self.convkw(out)
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
 
-        # beta = self.GatingMechanism(convw, convkw)
-        # local_branch = convw * beta + (1.0 - beta) * convkw
+        beta = self.GatingMechanism(convw, convkw)
+        local_branch1 = convw * beta + (1.0 - beta) * convkw
+
         frame_query = out.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
         frame = frame_query
         frame_query = frame_query.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 1, embedding_size]
@@ -364,8 +365,8 @@ class SGPBlock(nn.Module):
         out_summary = self.summary_fc(out)
 
         global_branch = out_summary * weights
-        out = local_branch + out + global_branch #+ fc * phi
-
+        # out = local_branch + out + global_branch + local_branch1 #+ fc * phi
+        out = local_branch + out  + fc * phi
         # ========================
         out = x * out_mask + self.drop_path_out(out)
         # FFN
