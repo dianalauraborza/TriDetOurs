@@ -210,6 +210,7 @@ class TriDet(nn.Module):
     ):
         super().__init__()
         # re-distribute params to backbone / neck / head
+        print(backbone_arch)
         self.fpn_strides = [scale_factor ** i for i in range(backbone_arch[-1] + 1)]
 
         self.input_noise = input_noise
