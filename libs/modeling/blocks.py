@@ -255,18 +255,12 @@ class SGPBlock(nn.Module):
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
-        self.type = 'summary'
 
-        if self.type == 'gating':
-            self.GatingMechanism = GatingMechanism(n_embd, 32)
 
-        if self.type == 'summary':
-            self.cross_attention = nn.MultiheadAttention(n_embd, 4, bias=False, batch_first=True)
-            self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
-            self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-            # self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-
-        print('type ', self.type)
+        self.GatingMechanism = GatingMechanism(n_embd, 32)
+        self.cross_attention = nn.MultiheadAttention(n_embd, 4, bias=False, batch_first=True)
+        self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
+        self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
         # input
         if n_ds_stride > 1:
@@ -344,30 +338,14 @@ class SGPBlock(nn.Module):
         if self.type == 'original':
             out = fc * phi + (convw + convkw) * psi + out
 
-        if self.type == 'gating':
-            beta = self.GatingMechanism(convw, convkw)
-            gate = convw * beta + (1.0 - beta) * convkw
-            out = fc * phi + gate + out
-
-        if self.type == 'summary':
-            summary = self.summarization(out)
-            # print('out ', out.shape)
-            # print(summary.shape)
-            # summary = torch.mean(summary, dim=1, keepdim=True)
-            # print('after mean ', summary.shape)
-            # summary = summary.permute(0, 2, 1)
-            out_sa = out.permute(0, 2, 1)
-            # print(summary.shape, out_sa.shape)
-            res = self.cross_attention(query=out_sa, key=summary, value=summary)[0]
-
-            res = res.permute(0, 2, 1)
-
-            # print('after permute: ', summary.shape)
-            summary = torch.relu(self.summary_project(res))
-            # print(summary.shape, res.shape, out.shape)
-
-
-            out = (convw + convkw) * psi + out + summary +fc * phi
+        beta = self.GatingMechanism(convw, convkw)
+        gate = convw * beta + (1.0 - beta) * convkw
+        summary = self.summarization(out)
+        out_sa = out.permute(0, 2, 1)
+        res = self.cross_attention(query=out_sa, key=summary, value=summary)[0]
+        res = res.permute(0, 2, 1)
+        summary = torch.relu(self.summary_project(res))
+        out = gate + out + summary
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
