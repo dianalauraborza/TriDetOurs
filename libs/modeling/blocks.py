@@ -230,7 +230,7 @@ class SGPBlock(nn.Module):
             act_layer=nn.GELU,  # nonlinear activation used after conv, default ReLU,
             downsample_type='max',
             init_conv_vars=1 , # init gaussian variance for the weight
-            num_summary_tokens = 64
+            num_summary_tokens = 0
     ):
         super().__init__()
         # must use odd sized kernel
@@ -260,6 +260,7 @@ class SGPBlock(nn.Module):
 
         self.GatingMechanism = GatingMechanism(n_embd, 32)
 
+        self.num_summary_tokens = num_summary_tokens
         self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
         self.shared_ann = nn.Linear(n_embd, n_embd)
         self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
@@ -337,19 +338,22 @@ class SGPBlock(nn.Module):
         beta = self.GatingMechanism(convw, convkw)
         local_branch = convw * beta + (1.0 - beta) * convkw
 
-        summary = self.summarization(out)
-        summary_mean = torch.mean(summary, dim=1, keepdim=False)
-        summary_max = torch.max(summary, dim=1, keepdim=False)[0]
+        if self.num_summary_tokens > 0:
+            summary = self.summarization(out)
+            summary_mean = torch.mean(summary, dim=1, keepdim=False)
+            summary_max = torch.max(summary, dim=1, keepdim=False)[0]
 
-        summary_mean = self.shared_ann(summary_mean)
-        summary_max = self.shared_ann(summary_max)
+            summary_mean = self.shared_ann(summary_mean)
+            summary_max = self.shared_ann(summary_max)
 
-        weights = torch.sigmoid(summary_mean + summary_max)
-        weights = weights.unsqueeze(axis=-1)
-        out_summary = self.summary_fc(out)
+            weights = torch.sigmoid(summary_mean + summary_max)
+            weights = weights.unsqueeze(axis=-1)
+            out_summary = self.summary_fc(out)
 
-        global_branch = out_summary * weights
-        out = local_branch + out + global_branch #+ fc * phi
+            global_branch = out_summary * weights
+            out = local_branch + out + global_branch #+ fc * phi
+        else:
+            out = local_branch + out + fc * phi
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
