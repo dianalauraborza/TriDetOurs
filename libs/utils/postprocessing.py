@@ -128,7 +128,7 @@ def postprocess_results(results, cls_score_file, num_pred=200, topk=2):
         pred_score, pred_segment, pred_label = \
             result['score'], result['segment'], result['label']
         num_segs = min(num_pred, len(pred_score))
-
+        print('pred_score', pred_score, 'pred_segment', pred_segment, 'pred_label', pred_label)
         # duplicate all segment and assign the topk labels
         # K x 1 @ 1 N -> K x N -> KN
         # multiply the scores
