@@ -14,7 +14,7 @@ class TokenSummarizationMHA(nn.Module):
         self.dim = dim
         self.attn = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, dropout=dropout, batch_first=True)
         self.tokens = nn.Parameter(torch.randn(1, self.num_tokens, self.dim) * 0.02)
-
+        nn.init.xavier_uniform_(self.tokens)
 
     def forward(self, v):
         v = torch.permute(v, (0, 2, 1)) # permute from (dim, T) to (T, dim)
@@ -259,7 +259,7 @@ class SGPBlock(nn.Module):
 
         self.num_summary_tokens = num_summary_tokens
         if num_summary_tokens > 0:
-            self.cross_attention = nn.MultiheadAttention(n_embd, 4, bias=False, batch_first=True)
+            self.cross_attention = nn.MultiheadAttention(n_embd, 4, bias=False, batch_first=True, dropout=0.2)
             self.summarization = TokenSummarizationMHA(
                 num_summary_tokens, n_embd)
             self.summary_project = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
@@ -320,6 +320,7 @@ class SGPBlock(nn.Module):
     def forward(self, x, mask):
         # X shape: B, C, T
         B, C, T = x.shape
+
         x = self.downsample(x)
         out_mask = F.interpolate(
             mask.to(x.dtype),
