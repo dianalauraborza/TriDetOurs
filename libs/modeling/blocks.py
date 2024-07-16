@@ -226,8 +226,8 @@ class SGPBlock(nn.Module):
             path_pdrop=0.0,  # drop path rate
             act_layer=nn.GELU,  # nonlinear activation used after conv, default ReLU,
             downsample_type='max',
-            init_conv_vars=1 , # init gaussian variance for the weight
-            num_summary_tokens = 64
+            init_conv_vars=1, # init gaussian variance for the weight
+            num_summary_tokens=1
     ):
         super().__init__()
         # must use odd sized kernel
@@ -258,7 +258,7 @@ class SGPBlock(nn.Module):
         self.GatingMechanism = GatingMechanism(n_embd, 32)
 
         self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
-        self.shared_ann = nn.Linear(n_embd, n_embd)
+
         # self.shared_ann1 = nn.Linear(n_embd, n_embd//2)
         # self.shared_ann2 = nn.Linear(n_embd//2, n_embd)
         self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
@@ -337,11 +337,11 @@ class SGPBlock(nn.Module):
         local_branch = convw * beta + (1.0 - beta) * convkw
 
         summary = self.summarization(out)
-        summary_mean = torch.mean(summary, dim=1, keepdim=False)
-        summary_max = torch.max(summary, dim=1, keepdim=False)[0]
-
-        summary_mean = self.shared_ann(summary_mean)
-        summary_max = self.shared_ann(summary_max)
+        # summary_mean = torch.mean(summary, dim=1, keepdim=False)
+        # summary_max = torch.max(summary, dim=1, keepdim=False)[0]
+        #
+        # summary_mean = self.shared_ann(summary_mean)
+        # summary_max = self.shared_ann(summary_max)
 
         # summary_mean = self.shared_ann1(summary_mean)
         # summary_mean = self.shared_ann2(summary_mean)
@@ -349,11 +349,12 @@ class SGPBlock(nn.Module):
         # summary_max = self.shared_ann1(summary_max)
         # summary_max = self.shared_ann2(summary_max)
 
-        weights = torch.sigmoid(summary_mean+summary_max)
-        weights = weights.unsqueeze(axis=-1)
+        # weights = torch.sigmoid(summary_mean+summary_max)
+        # weights = weights.unsqueeze(axis=-1)
         out_summary = self.summary_fc(out)
+        print('summary shape ', summary.shape, ' -> ', out_summary.shape)
 
-        global_branch = out_summary * weights
+        global_branch = out_summary * summary
         out = local_branch + out + global_branch #+ fc * phi
 
         # ========================

@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="0f9a02d2-69dd-47bd-8f84-235deed1340b" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/thumos_i3d.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/configs/thumos_i3d.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/libs/modeling/backbones.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/modeling/backbones.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/libs/modeling/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/modeling/blocks.py" afterDir="false" />
     </list>
@@ -14,12 +15,19 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 1
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
   <component name="ProjectId" id="2ixFpUGp4aPSw37kPbRYEmQAGMu" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -28,10 +36,15 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "both__summary__and__gating",
-    "last_opened_file_path": "/user/dborza/home/work/TriDetOurs"
+    "git-widget-placeholder": "both__summary__and__gating__1__token",
+    "last_opened_file_path": "/user/dborza/home/work/TriDetOurs/configs"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/configs" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
