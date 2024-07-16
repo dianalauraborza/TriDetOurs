@@ -354,7 +354,7 @@ class SGPBlock(nn.Module):
         summary = summary.unsqueeze(axis=-1)
         # summary = torch.sigmoid(summary)
         out_summary = self.summary_fc(out)
-        print('summary shape ', summary.shape, ' -> ', out_summary.shape)
+        # print('summary shape ', summary.shape, ' -> ', out_summary.shape)
 
         global_branch = out_summary * summary
         out = local_branch + out + global_branch #+ fc * phi
