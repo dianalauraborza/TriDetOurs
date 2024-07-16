@@ -262,7 +262,7 @@ class SGPBlock(nn.Module):
         # self.shared_ann1 = nn.Linear(n_embd, n_embd//2)
         # self.shared_ann2 = nn.Linear(n_embd//2, n_embd)
         self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
-
+        self.relu = torch.nn.ReLU()
 
         # input
         if n_ds_stride > 1:
@@ -352,7 +352,7 @@ class SGPBlock(nn.Module):
         # weights = torch.sigmoid(summary_mean+summary_max)
         summary = summary.squeeze(axis=1)
         summary = summary.unsqueeze(axis=-1)
-        # summary = torch.sigmoid(summary)
+        summary = torch.nn.ReLU()(summary)
         out_summary = self.summary_fc(out)
         # print('summary shape ', summary.shape, ' -> ', out_summary.shape)
 
