@@ -68,16 +68,19 @@ class SGPBackbone(nn.Module):
         self.stem = nn.ModuleList()
         for idx in range(arch[1]):
             self.stem.append(
-                SGPBlock(n_embd, 1, 1, n_hidden=sgp_mlp_dim, k=k, init_conv_vars=init_conv_vars))
+                SGPBlock(n_embd, 1, 1, n_hidden=sgp_mlp_dim, k=k,
+                         init_conv_vars=init_conv_vars,
+                         num_summary_tokens=0))
 
         # main branch using transformer with pooling
         self.branch = nn.ModuleList()
 
-        # tokens = [64, 32, 16, 8, 4]
+        tokens = [64, 0, 0, 0, 0]
         for idx in range(arch[2]):
             self.branch.append(SGPBlock(n_embd, self.sgp_win_size[1 + idx], self.scale_factor, path_pdrop=path_pdrop,
                                         n_hidden=sgp_mlp_dim, downsample_type=downsample_type, k=k,
-                                        init_conv_vars=init_conv_vars))
+                                        init_conv_vars=init_conv_vars,
+                                        num_summary_tokens=tokens[idx]))
         # init weights
         self.apply(self.__init_weights__)
 
