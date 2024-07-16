@@ -254,7 +254,7 @@ class SGPBlock(nn.Module):
         self.convkw = nn.Conv1d(n_embd, n_embd, up_size, stride=1, padding=up_size // 2, groups=n_embd)
         self.global_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
-        self.decrease_ratio = 32
+        self.decrease_ratio = 16
         print('n_embd ', n_embd, n_embd//self.decrease_ratio)
         self.GatingMechanism = GatingMechanism(n_embd, n_embd//self.decrease_ratio)
 
