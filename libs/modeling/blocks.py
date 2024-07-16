@@ -262,6 +262,9 @@ class SGPBlock(nn.Module):
         # self.shared_ann1 = nn.Linear(n_embd, n_embd//2)
         # self.shared_ann2 = nn.Linear(n_embd//2, n_embd)
         self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
+
+        self.conv_weight = nn.Conv1d(n_embd * 2, n_embd, kernel_size=1, stride=1, padding=0)
+
         self.relu = torch.nn.ReLU()
 
         # input
@@ -354,9 +357,12 @@ class SGPBlock(nn.Module):
         summary = summary.unsqueeze(axis=-1)
         summary = torch.nn.ReLU()(summary)
         out_summary = self.summary_fc(out)
+
+        val = torch.cat((summary, out_summary), dim=1)
+        weights = self.conv_weight(val)
         # print('summary shape ', summary.shape, ' -> ', out_summary.shape)
 
-        global_branch = out_summary * summary
+        global_branch = out_summary * weights
         out = local_branch + out + global_branch #+ fc * phi
 
         # ========================
