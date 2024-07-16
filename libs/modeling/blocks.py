@@ -355,9 +355,9 @@ class SGPBlock(nn.Module):
         # weights = torch.sigmoid(summary_mean+summary_max)
         summary = summary.squeeze(axis=1)
         summary = summary.unsqueeze(axis=-1)
-        summary = torch.nn.ReLU()(summary)
+        # summary = torch.nn.ReLU()(summary)
         out_summary = self.summary_fc(out)
-
+        summary = summary.repeat(1, 1, out_summary.shape[-1])
         print('summary shape ', summary.shape, '; out summary ', out_summary.shape)
         val = torch.cat((summary, out_summary), dim=1)
         print('summary shape ', summary.shape, ' -> val shape', val.shape, '; out summary ', out.shape)
