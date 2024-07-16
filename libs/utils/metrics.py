@@ -301,6 +301,7 @@ def compute_average_precision_detection(
 
     for tidx in range(len(tiou_thresholds)):
         ap[tidx] = interpolated_prec_rec(precision_cumsum[tidx, :], recall_cumsum[tidx, :])
+    print('original', ground_truth, 'predictions', prediction, 'tiou', tiou_thresholds)
 
     return ap
 
