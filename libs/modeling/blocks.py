@@ -358,10 +358,11 @@ class SGPBlock(nn.Module):
         # summary = torch.nn.ReLU()(summary)
         out_summary = self.summary_fc(out)
         summary = summary.repeat(1, 1, out_summary.shape[-1])
-        print('summary shape ', summary.shape, '; out summary ', out_summary.shape)
+        # print('summary shape ', summary.shape, '; out summary ', out_summary.shape)
         val = torch.cat((summary, out_summary), dim=1)
-        print('summary shape ', summary.shape, ' -> val shape', val.shape, '; out summary ', out.shape)
+        # print('summary shape ', summary.shape, ' -> val shape', val.shape, '; out summary ', out.shape)
         weights = self.conv_weight(val)
+        weights = torch.sigmoid(weights)
 
 
         global_branch = out_summary * weights
