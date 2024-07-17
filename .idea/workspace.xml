@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0f9a02d2-69dd-47bd-8f84-235deed1340b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/configs/thumos_i3d.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/configs/thumos_i3d.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/libs/modeling/backbones.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/modeling/backbones.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/libs/modeling/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/modeling/blocks.py" afterDir="false" />
