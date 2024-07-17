@@ -368,7 +368,7 @@ class SGPBlock(nn.Module):
         # print('summary shape ', summary.shape, ' -> val shape', val.shape, '; out summary ', out.shape)
         # weights = self.conv_weight1(val)
         # weights = self.conv_weight2(weights)
-        summary = self.relu(summary)
+        summary = self.relu(self.global_fc(summary))
         # print('weight shape ', weights.shape)
 
         # global_branch = out_summary * weights
