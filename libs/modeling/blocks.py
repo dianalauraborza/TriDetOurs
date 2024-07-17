@@ -13,7 +13,8 @@ class TokenSummarizationMHA(nn.Module):
         self.num_heads = num_heads
         self.dim = dim
         self.attn = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, dropout=dropout, batch_first=True)
-        self.tokens = nn.Parameter(torch.randn(1, self.num_tokens, self.dim) * 0.025)
+        self.tokens = nn.Parameter(torch.randn(1, self.num_tokens, self.dim) * 0.01)
+        nn.init.kaiming_normal_(self.tokens)
 
 
     def forward(self, v):
@@ -257,7 +258,7 @@ class SGPBlock(nn.Module):
 
         self.GatingMechanism = GatingMechanism(n_embd, 32)
 
-        self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd)
+        self.summarization = TokenSummarizationMHA(num_summary_tokens, n_embd, num_heads=4)
 
         # self.shared_ann1 = nn.Linear(n_embd, n_embd//2)
         # self.shared_ann2 = nn.Linear(n_embd//2, n_embd)
@@ -355,8 +356,8 @@ class SGPBlock(nn.Module):
 
         # weights = torch.sigmoid(summary_mean+summary_max)
         # print('summary original shape ', summary.shape, 'phi shape: ', phi.shape)
-        # summary = summary.squeeze(axis=1)
-        # summary = summary.unsqueeze(axis=-1)
+        summary = summary.squeeze(axis=1)
+        summary = summary.unsqueeze(axis=-1)
         # print('summary after change: ', summary.shape)
         # summary = torch.nn.ReLU()(summary)
         # out_summary = self.summary_fc(out)
@@ -367,11 +368,11 @@ class SGPBlock(nn.Module):
         # print('summary shape ', summary.shape, ' -> val shape', val.shape, '; out summary ', out.shape)
         # weights = self.conv_weight1(val)
         # weights = self.conv_weight2(weights)
-        # weights = self.relu(summary)
+        summary = self.relu(summary)
         # print('weight shape ', weights.shape)
 
         # global_branch = out_summary * weights
-        out = local_branch + out + fc * phi
+        out = local_branch + out + fc * summary
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
