@@ -321,7 +321,7 @@ class SGPBlock(nn.Module):
         torch.nn.init.constant_(self.convkw.bias, 0)
         torch.nn.init.constant_(self.global_fc.bias, 0)
 
-    def forward(self, x, mask):
+    def forward(self, x, mask, return_beta = False):
         # X shape: B, C, T
         B, C, T = x.shape
         x = self.downsample(x)
@@ -355,11 +355,11 @@ class SGPBlock(nn.Module):
 
         # weights = torch.sigmoid(summary_mean+summary_max)
         # print('summary original shape ', summary.shape, 'phi shape: ', phi.shape)
-        summary = summary.squeeze(axis=1)
-        summary = summary.unsqueeze(axis=-1)
+        # summary = summary.squeeze(axis=1)
+        # summary = summary.unsqueeze(axis=-1)
         # print('summary after change: ', summary.shape)
         # summary = torch.nn.ReLU()(summary)
-        out_summary = self.summary_fc(out)
+        # out_summary = self.summary_fc(out)
 
         # summary = summary.repeat(1, 1, out_summary.shape[-1])
         # print('summary shape ', summary.shape, '; out summary ', out_summary.shape)
@@ -367,18 +367,21 @@ class SGPBlock(nn.Module):
         # print('summary shape ', summary.shape, ' -> val shape', val.shape, '; out summary ', out.shape)
         # weights = self.conv_weight1(val)
         # weights = self.conv_weight2(weights)
-        weights = self.relu(summary)
+        # weights = self.relu(summary)
         # print('weight shape ', weights.shape)
 
-        global_branch = out_summary * weights
-        out = local_branch + out + global_branch #+ fc * phi
+        # global_branch = out_summary * weights
+        out = local_branch + out + fc * phi
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
         # FFN
         out = out + self.drop_path_mlp(self.mlp(self.gn(out)))
 
-        return out, out_mask.bool()
+        if not return_beta:
+            return out, out_mask.bool()
+        else:
+            return out, out_mask.bool(), beta
 
 
 # drop path: from https://github.com/facebookresearch/SlowFast/blob/master/slowfast/models/common.py
