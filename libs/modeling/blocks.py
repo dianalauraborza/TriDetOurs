@@ -13,7 +13,7 @@ class TokenSummarizationMHA(nn.Module):
         self.num_heads = num_heads
         self.dim = dim
         self.attn = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, dropout=dropout, batch_first=True)
-        self.tokens = nn.Parameter(torch.randn(1, self.num_tokens, self.dim) * 0.02)
+        self.tokens = nn.Parameter(torch.randn(1, self.num_tokens, self.dim) * 0.025)
 
 
     def forward(self, v):
@@ -363,7 +363,7 @@ class SGPBlock(nn.Module):
         val = torch.cat((summary, out_summary), dim=1)
         # print('summary shape ', summary.shape, ' -> val shape', val.shape, '; out summary ', out.shape)
         weights = self.conv_weight1(val)
-        weights = self.conv_weight2(val)
+        weights = self.conv_weight2(weights)
         weights = torch.sigmoid(weights)
 
 
