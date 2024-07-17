@@ -353,19 +353,19 @@ class SGPBlock(nn.Module):
         local_branch = self.attention_gating(frame_query, kv, kv)[0]
         local_branch = local_branch.view(out.shape[0], out.shape[-1], out.shape[1]).permute(0, 2, 1).contiguous()
 
-        summary = self.summarization(out)
-        summary_mean = torch.mean(summary, dim=1, keepdim=False)
-        summary_max = torch.max(summary, dim=1, keepdim=False)[0]
-
-        summary_mean = self.shared_ann(summary_mean)
-        summary_max = self.shared_ann(summary_max)
-
-        weights = torch.sigmoid(summary_mean + summary_max)
-        weights = weights.unsqueeze(axis=-1)
-        out_summary = self.summary_fc(out)
-
-        global_branch = out_summary * weights
-        out = local_branch + out + global_branch + local_branch1 #+ fc * phi
+        # summary = self.summarization(out)
+        # summary_mean = torch.mean(summary, dim=1, keepdim=False)
+        # summary_max = torch.max(summary, dim=1, keepdim=False)[0]
+        #
+        # summary_mean = self.shared_ann(summary_mean)
+        # summary_max = self.shared_ann(summary_max)
+        #
+        # weights = torch.sigmoid(summary_mean + summary_max)
+        # weights = weights.unsqueeze(axis=-1)
+        # out_summary = self.summary_fc(out)
+        #
+        # global_branch = out_summary * weights
+        out = local_branch + out + local_branch1 + fc * phi
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
