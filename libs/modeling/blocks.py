@@ -354,10 +354,10 @@ class SGPBlock(nn.Module):
         # summary_max = self.shared_ann2(summary_max)
 
         # weights = torch.sigmoid(summary_mean+summary_max)
-        print('summary original shape ', summary.shape, 'phi shape: ', phi.shape)
+        # print('summary original shape ', summary.shape, 'phi shape: ', phi.shape)
         summary = summary.squeeze(axis=1)
         summary = summary.unsqueeze(axis=-1)
-        print('summary after change: ', summary.shape)
+        # print('summary after change: ', summary.shape)
         # summary = torch.nn.ReLU()(summary)
         out_summary = self.summary_fc(out)
 
@@ -368,7 +368,7 @@ class SGPBlock(nn.Module):
         # weights = self.conv_weight1(val)
         # weights = self.conv_weight2(weights)
         weights = self.relu(summary)
-        print('weight shape ', weights.shape)
+        # print('weight shape ', weights.shape)
 
         global_branch = out_summary * weights
         out = local_branch + out + global_branch #+ fc * phi
