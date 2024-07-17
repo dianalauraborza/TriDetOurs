@@ -263,7 +263,8 @@ class SGPBlock(nn.Module):
         # self.shared_ann2 = nn.Linear(n_embd//2, n_embd)
         self.summary_fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
 
-        self.conv_weight = nn.Conv1d(n_embd * 2, n_embd, kernel_size=1, stride=1, padding=0)
+        self.conv_weight1 = nn.Conv1d(n_embd * 2, n_embd, kernel_size=1, stride=1, padding=0)
+        self.conv_weight2 = nn.Conv1d(n_embd, n_embd, kernel_size=1, stride=1, padding=0)
 
         self.relu = torch.nn.ReLU()
 
@@ -361,7 +362,8 @@ class SGPBlock(nn.Module):
         # print('summary shape ', summary.shape, '; out summary ', out_summary.shape)
         val = torch.cat((summary, out_summary), dim=1)
         # print('summary shape ', summary.shape, ' -> val shape', val.shape, '; out summary ', out.shape)
-        weights = self.conv_weight(val)
+        weights = self.conv_weight1(val)
+        weights = self.conv_weight2(val)
         weights = torch.sigmoid(weights)
 
 
