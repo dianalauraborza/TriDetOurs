@@ -348,7 +348,7 @@ class SGPBlock(nn.Module):
         convw = convw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
         convkw = convkw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
 
-        print('x shape ', x.shape, self.kernel_size, padding = (self.kernel_size // 2, 0))
+        print('x shape ', x.shape, 'kernel size: ', self.kernel_size, 'padding: ', (self.kernel_size // 2, 0))
         unfolded_x = F.unfold(x.unsqueeze(2), kernel_size=(self.kernel_size, 1), padding=(self.kernel_size // 2, 0))
         print('unfolded_x shape: ', unfolded_x.shape)
         unfolded_x = unfolded_x.view(x.size(0), x.size(1), self.kernel_size, -1)
