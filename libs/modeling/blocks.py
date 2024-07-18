@@ -250,8 +250,10 @@ class SGPBlock(nn.Module):
         # add 1 to avoid have the same size as the instant-level branch
         up_size = round((kernel_size + 1) * k)
         up_size = up_size + 1 if up_size % 2 == 0 else up_size
-        self.kernek_size = kernel_size
+
+
         self.up_size = up_size
+        print('\t ----> kernel size: ', self.kernel_size, '; up size: ', self.up_size)
         self.psi = nn.Conv1d(n_embd, n_embd, kernel_size, stride=1, padding=kernel_size // 2, groups=n_embd)
         self.fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
         self.convw = nn.Conv1d(n_embd, n_embd, kernel_size, stride=1, padding=kernel_size // 2, groups=n_embd)
