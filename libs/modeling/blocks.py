@@ -342,13 +342,13 @@ class SGPBlock(nn.Module):
         local_branch1 = convw * beta + (1.0 - beta) * convkw
 
         frame_query = out.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
-        frame = frame_query
+      
         frame_query = frame_query.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 1, embedding_size]
         frame_query = frame_query.view(frame_query.shape[0]*frame_query.shape[1], frame_query.shape[2], frame_query.shape[3])  # Shape: [bs * T, 1, embedding_size]
 
 
-        convw = convw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
-        convkw = convkw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
+        # convw = convw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
+        # convkw = convkw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
 
         print('x shape ', x.shape, 'kernel size: ', self.up_size, 'padding: ', (self.up_size // 2, 0))
         unfolded_x = F.unfold(x.unsqueeze(2), kernel_size=(self.up_size, 1), padding=(self.up_size // 2, 0))
@@ -360,11 +360,11 @@ class SGPBlock(nn.Module):
         print('left frame: ', left_frames.shape, '; right frame: ', right_frames.shape, '; frame query: ', frame_query.shape)
 
 
-        # Concatenate extreme frames
-        extreme_frames = torch.cat((left_frames, right_frames), dim=2)
-        print('extreme frames shapes: ', extreme_frames.shape)
-        kv = torch.cat((convw, convkw, frame), dim=1)  # Shape: [bs, 3, embedding_size, T]
-        kv = kv.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 3, embedding_size]
+        left_frames = left_frames.unsqueeze(1) # [bs, embedding_size, T] = > [bs, 1, embedding_size, T]
+        right_frames = right_frames.unsqueeze(1) # [bs, embedding_size, T] = > [bs, 1, embedding_size, T]
+        kv = torch.cat((left_frames, right_frames), dim=1) # [bs, 2, embedding_size, T]
+
+        kv = kv.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 2, embedding_size]
         kv = kv.view(kv.shape[0] * kv.shape[1], kv.shape[2], kv.shape[3])  # Shape: [bs * T, 2, embedding_size]
 
         local_branch = self.attention_gating(frame_query, kv, kv)[0]
