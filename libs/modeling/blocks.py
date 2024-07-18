@@ -383,7 +383,9 @@ class SGPBlock(nn.Module):
         local_branch = self.attention_gating(frame_query, kv, kv)[0]
         local_branch = local_branch.view(out.shape[0], out.shape[-1], out.shape[1]).permute(0, 2, 1).contiguous()
 
-        out = local_branch + out + local_branch1 + fc * phi
+        out = (local_branch + out
+               # + local_branch1
+               + fc * phi)
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
