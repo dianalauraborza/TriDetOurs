@@ -347,9 +347,6 @@ class SGPBlock(nn.Module):
         frame_query = frame_query.view(frame_query.shape[0]*frame_query.shape[1], frame_query.shape[2], frame_query.shape[3])  # Shape: [bs * T, 1, embedding_size]
 
 
-        # convw = convw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
-        # convkw = convkw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
-
         # print('x shape ', x.shape, 'kernel size: ', self.up_size, 'padding: ', (self.up_size // 2, 0))
         unfolded_x = F.unfold(x.unsqueeze(2), kernel_size=(self.up_size, 1), padding=(self.up_size // 2, 0))
         # print('unfolded_x shape: ', unfolded_x.shape)
@@ -362,7 +359,23 @@ class SGPBlock(nn.Module):
 
         left_frames = left_frames.unsqueeze(1) # [bs, embedding_size, T] = > [bs, 1, embedding_size, T]
         right_frames = right_frames.unsqueeze(1) # [bs, embedding_size, T] = > [bs, 1, embedding_size, T]
-        kv = torch.cat((left_frames, right_frames), dim=1) # [bs, 2, embedding_size, T]
+
+
+        if self.kernel_size > 1:
+            unfolded_x = F.unfold(x.unsqueeze(2), kernel_size=(self.kernel_size, 1), padding=(self.kernel_size // 2, 0))
+            unfolded_x = unfolded_x.view(x.size(0), x.size(1), self.up_size, -1)
+
+            left_frames_short = unfolded_x[:, :, 0, :]
+            right_frames_short = unfolded_x[:, :, -1, :]
+
+            left_frames_short = left_frames_short.unsqueeze(1)  # [bs, embedding_size, T] = > [bs, 1, embedding_size, T]
+            right_frames_short = right_frames_short.unsqueeze(1)  # [bs, embedding_size, T] = > [bs, 1, embedding_size, T]
+            kv = torch.cat((left_frames, right_frames, left_frames_short, right_frames_short), dim=1)  # [bs, 4, embedding_size, T]
+
+        else:
+            left_frames_short = out.unsqueeze(1)
+            kv = torch.cat((left_frames, right_frames, left_frames_short),
+                           dim=1)  # [bs, 3, embedding_size, T]
 
         kv = kv.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 2, embedding_size]
         kv = kv.view(kv.shape[0] * kv.shape[1], kv.shape[2], kv.shape[3])  # Shape: [bs * T, 2, embedding_size]
@@ -370,18 +383,6 @@ class SGPBlock(nn.Module):
         local_branch = self.attention_gating(frame_query, kv, kv)[0]
         local_branch = local_branch.view(out.shape[0], out.shape[-1], out.shape[1]).permute(0, 2, 1).contiguous()
 
-        # summary = self.summarization(out)
-        # summary_mean = torch.mean(summary, dim=1, keepdim=False)
-        # summary_max = torch.max(summary, dim=1, keepdim=False)[0]
-        #
-        # summary_mean = self.shared_ann(summary_mean)
-        # summary_max = self.shared_ann(summary_max)
-        #
-        # weights = torch.sigmoid(summary_mean + summary_max)
-        # weights = weights.unsqueeze(axis=-1)
-        # out_summary = self.summary_fc(out)
-        #
-        # global_branch = out_summary * weights
         out = local_branch + out + local_branch1 + fc * phi
 
         # ========================
