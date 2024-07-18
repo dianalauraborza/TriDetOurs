@@ -357,6 +357,7 @@ class SGPBlock(nn.Module):
         print('unfolded_x after view : ', unfolded_x.shape)
         left_frames = unfolded_x[:, :, 0, :]
         right_frames = unfolded_x[:, :, -1, :]
+        print('left frame: ', left_frames.shape, '; right frame: ', right_frames.shape, '; frame query: ', frame_query.shape)
 
 
         # Concatenate extreme frames
