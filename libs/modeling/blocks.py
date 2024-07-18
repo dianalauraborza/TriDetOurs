@@ -250,7 +250,8 @@ class SGPBlock(nn.Module):
         # add 1 to avoid have the same size as the instant-level branch
         up_size = round((kernel_size + 1) * k)
         up_size = up_size + 1 if up_size % 2 == 0 else up_size
-
+        self.kernek_size = kernel_size
+        self.up_size = up_size
         self.psi = nn.Conv1d(n_embd, n_embd, kernel_size, stride=1, padding=kernel_size // 2, groups=n_embd)
         self.fc = nn.Conv1d(n_embd, n_embd, 1, stride=1, padding=0, groups=n_embd)
         self.convw = nn.Conv1d(n_embd, n_embd, kernel_size, stride=1, padding=kernel_size // 2, groups=n_embd)
@@ -343,9 +344,22 @@ class SGPBlock(nn.Module):
         frame_query = frame_query.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 1, embedding_size]
         frame_query = frame_query.view(frame_query.shape[0]*frame_query.shape[1], frame_query.shape[2], frame_query.shape[3])  # Shape: [bs * T, 1, embedding_size]
 
+
         convw = convw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
         convkw = convkw.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
 
+        print('x shape ', x.shape)
+        unfolded_x = F.unfold(x.unsqueeze(2), kernel_size=(self.kernel_size, 1), padding=(self.kernel_size // 2, 0))
+        print('unfolded_x shape: ', unfolded_x.shape)
+        unfolded_x = unfolded_x.view(x.size(0), x.size(1), self.kernel_size, -1)
+        print('unfolded_x after view : ', unfolded_x.shape)
+        left_frames = unfolded_x[:, :, 0, :]
+        right_frames = unfolded_x[:, :, -1, :]
+
+
+        # Concatenate extreme frames
+        extreme_frames = torch.cat((left_frames, right_frames), dim=2)
+        print('extreme frames shapes: ', extreme_frames.shape)
         kv = torch.cat((convw, convkw, frame), dim=1)  # Shape: [bs, 3, embedding_size, T]
         kv = kv.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 3, embedding_size]
         kv = kv.view(kv.shape[0] * kv.shape[1], kv.shape[2], kv.shape[3])  # Shape: [bs * T, 2, embedding_size]
@@ -365,7 +379,7 @@ class SGPBlock(nn.Module):
         # out_summary = self.summary_fc(out)
         #
         # global_branch = out_summary * weights
-        out = local_branch + out + local_branch1 #+ fc * phi
+        out = local_branch + out + local_branch1 + fc * phi
 
         # ========================
         out = x * out_mask + self.drop_path_out(out)
