@@ -336,11 +336,12 @@ class SGPBlock(nn.Module):
         fc = self.fc(out)
         convw = self.convw(out)
         convkw = self.convkw(out)
+        #psi = self.psi(out)
         phi = torch.relu(self.global_fc(out.mean(dim=-1, keepdim=True)))
 
-        beta = self.GatingMechanism(convw, convkw)
-        local_branch1 = convw * beta + (1.0 - beta) * convkw
-
+        #beta = self.GatingMechanism(convw, convkw)
+        #local_branch1 = convw * beta + (1.0 - beta) * convkw
+        local_branch1 = torch.mean(convw + convkw, dim=0)
         frame_query = out.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
 
         frame_query = frame_query.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 1, embedding_size]
