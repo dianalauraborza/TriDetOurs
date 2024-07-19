@@ -341,7 +341,8 @@ class SGPBlock(nn.Module):
 
         #beta = self.GatingMechanism(convw, convkw)
         #local_branch1 = convw * beta + (1.0 - beta) * convkw
-        local_branch1 = torch.max(convw + convkw, dim=0)[0]
+        # local_branch1 = torch.max(convw + convkw, dim=0)[0]
+        local_branch1 = torch.maximum(convw, convkw)
         frame_query = out.unsqueeze(1)  # Shape: [bs, 1, embedding_size, T]
 
         frame_query = frame_query.permute(0, 3, 1, 2).contiguous()  # Shape: [bs, T, 1, embedding_size]
