@@ -363,10 +363,12 @@ class SGPBlock(nn.Module):
 
         if self.kernel_size > 1:
             unfolded_x = F.unfold(x.unsqueeze(2), kernel_size=(self.kernel_size, 1), padding=(self.kernel_size // 2, 0))
-            unfolded_x = unfolded_x.view(x.size(0), x.size(1), self.up_size, -1)
+            unfolded_x = unfolded_x.view(x.size(0), x.size(1), self.kernel_size, -1)
 
             left_frames_short = unfolded_x[:, :, 0, :]
             right_frames_short = unfolded_x[:, :, -1, :]
+            print('left frame short: ', left_frames_short.shape, '; right frame short: ', right_frames_short.shape, '; frame query: ',
+                  frame_query.shape)
 
             left_frames_short = left_frames_short.unsqueeze(1)  # [bs, embedding_size, T] = > [bs, 1, embedding_size, T]
             right_frames_short = right_frames_short.unsqueeze(1)  # [bs, embedding_size, T] = > [bs, 1, embedding_size, T]
