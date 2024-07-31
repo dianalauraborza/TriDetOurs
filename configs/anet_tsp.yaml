@@ -35,8 +35,8 @@ model: {
 opt: {
   learning_rate: 0.001,
   eta_min: 0.00005,
-  warmup_epochs: 10,
-  epochs: 20,
+  warmup_epochs: 5,
+  epochs: 10,
   weight_decay: 0.04,
 }
 loader: {
@@ -64,4 +64,4 @@ test_cfg: {
   ext_score_file: /data/stars/user/dborza/work/TriDet/data/anet_1.3/annotations/cuhk_val_simp_share.json,
   duration_thresh: 0.1,
 }
-output_folder: ./ckpt/
+output_folder: ./ckpt_a/

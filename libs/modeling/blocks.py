@@ -382,6 +382,8 @@ class SGPBlock(nn.Module):
         # out_summary = self.summary_fc(out)
         #
         # global_branch = out_summary * weights
+        #out = local_branch1 + out + fc * phi
+        #out = local_branch + out + fc * phi #attention
         out = local_branch + out + local_branch1 + fc * phi
 
         # ========================
